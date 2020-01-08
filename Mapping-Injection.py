@@ -26,6 +26,10 @@ LPDWORD = POINTER(DWORD)
 LPSECURITY_ATTRIBUTES = POINTER(SECURITY_ATTRIBUTES)
 LPTHREAD_START_ROUTINE = WINFUNCTYPE(DWORD, LPVOID)
 
+# DLL's to import functions from
+kernel32 = windll.kernel32
+KernelBase = windll.KernelBase
+
 # msfvenom -p windows/x64/messagebox -a x64 EXITFUNC=thread TEXT='Mapping Injection!' --format c
 # Payload size: 325 bytes
 # Final size of c file: 1390 bytes
@@ -58,9 +62,6 @@ if len(sys.argv) != 2:
     print "[*] Usage: %s <PID>" % sys.argv[0]
     sys.exit(0)
 
-kernel32 = windll.kernel32
-KernelBase = windll.KernelBase
-ntdll = windll.ntdll
 pid = sys.argv[1]
 
 # https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-openprocess
