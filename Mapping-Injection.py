@@ -109,7 +109,7 @@ if not lpMapAddress:
 # https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/memcpy-wmemcpy?view=vs-2019
 cdll.msvcrt.memcpy.restype = c_void_p       # void *memcpy(
 cdll.msvcrt.memcpy.argtypes = [c_void_p,    #    void *dest,
-                               c_char_p,   #    const void *src,
+                               c_char_p,    #    const void *src,
                                c_int]       #    size_t count );
 
 # Place the shellcode into the mapping object.
